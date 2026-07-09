@@ -98,6 +98,7 @@ class Small_LLM_Model:
 
     def get_logits_from_input_ids(self, input_ids: list[int]) -> list[float]:
         """
+        ! Explain roughly what softmax is.
         Given a list of input token ids, return the raw logits (no softmax) for the next token.
         """
         input_tensor = torch.tensor([input_ids], device=self._device, dtype=torch.long)
