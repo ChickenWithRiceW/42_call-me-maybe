@@ -98,6 +98,8 @@ class Small_LLM_Model:
 
     def get_logits_from_input_ids(self, input_ids: list[int]) -> list[float]:
         """
+        Logits is a term to discribe the raw probability data that comes out of the computation.
+        It is usually accomplished by normalizing the values by using a softmax to then use it as a normal probability matrix from 0-1
         ! Explain roughly what softmax is.
         Given a list of input token ids, return the raw logits (no softmax) for the next token.
         """
