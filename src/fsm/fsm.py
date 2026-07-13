@@ -8,11 +8,59 @@ import llm_sdk
 
 
 class FsmNode():
-    def __init__(self, start, end, con_loop, con_next):
+    def __init__(self, start, end, con_loop, con_next, isfirst, islast):
         self.start: Callable = start
         self.end: Callable[[Any]] = end
+
+        self.isfirst: bool = isfirst
+        self.islast: bool = islast
+
         self.con_loop: Callable[[str], bool] = con_loop
         self.con_next: Callable[[str], bool] = con_next
+
+class Node:
+    def __init__(self, start:str , end: str, con_loop, con_next, isfirst: bool, islast: bool):
+        if isfirst:
+            start = "{" + start
+
+        if islast:
+            end = end + "}"
+
+        self.start: str = start
+        self.end: str = end
+
+        self.isfirst: bool = isfirst
+        self.islast: bool = islast
+
+    def con_loop(self, s: str) -> bool:
+        pass
+
+    def con_next(self, s: str) -> bool:
+        pass
+
+class NodeInt(Node):
+    def __init__(self, start, end, isfirst, islast):
+        super().__init__(start, end, isfirst, islast)
+
+    def con_loop(self, s: str) -> None:
+        return s.isnumeric()
+    
+    def con_next(self, s: str):
+        if self.islast:
+            return s == "}"
+        return s == ","
+
+class NodeStr(Node):
+    def __init__(self, start, end, isfirst, islast):
+        super().__init__(start, end, isfirst, islast)
+
+    def con_loop(self, s: str) -> None:
+        return s.isalnum()
+    
+    def con_next(self, s: str):
+        return s == ','
+
+
 
 
 def func_def_loader(file_name: str = "functions_definition.json") -> None:
@@ -28,31 +76,23 @@ def func_def_loader(file_name: str = "functions_definition.json") -> None:
 
 def fsm_node_creator(parameters: tuple, name_list: list[str] = None) -> FsmNode:
     # Start will add key onto string
-    start = lambda s: s + f'"{parameters[0]}": '
-    print(parameters[1])
+    start = f'"{parameters[0]}": '
     match parameters[1]:
         case int.__class__():
-            con_loop = lambda c: c.isnumeric()
-            con_next = lambda c: c == ','
             end = None
 
         case str.__class__():
-            con_loop = lambda c: c.isalnum()
-            con_next = lambda c: c == '"'
-            end = lambda s: s + ","
+            end = ","
         
         case "func":
-            con_loop = lambda s: matches_uniq_str(s, name_list)
-            con_next = lambda c: c == '"'
-            end = lambda s: s + ","
+            end = ","
         case _:
             print("Nothing worked")
 
     return FsmNode(
         start=start,
         end=end,
-        con_loop=con_loop,
-        con_next=con_next
+        isfirst=
     )
 
 
