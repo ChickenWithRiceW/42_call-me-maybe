@@ -6,6 +6,7 @@ import json
 import llm_sdk
 # from typing import Callable | Subject once said dont import from typing
 
+llm = llm_sdk.Small_LLM_Model()
 
 class FsmNode():
     def __init__(self, start, end, con_loop, con_next):
@@ -28,23 +29,25 @@ def func_def_loader(file_name: str = "functions_definition.json") -> None:
 
 def fsm_node_creator(parameters: tuple, name_list: list[str] = None) -> FsmNode:
     # Start will add key onto string
-    start = lambda s: s + f'"{parameters[0]}": '
-    print(parameters[1])
+    start = lambda s: s + f' "{parameters[0]}": '
+    global end
+    global con_loop
+    global con_next
     match parameters[1]:
         case int.__class__():
             con_loop = lambda c: c.isnumeric()
             con_next = lambda c: c == ','
-            end = None
+            end = ""
 
         case str.__class__():
             con_loop = lambda c: c.isalnum()
             con_next = lambda c: c == '"'
-            end = lambda s: s + ","
-        
+            end = ","
+
         case "func":
-            con_loop = lambda s: matches_uniq_str(s, name_list)
+            con_loop = matches_uniq_str
             con_next = lambda c: c == '"'
-            end = lambda s: s + ","
+            end = ","
         case _:
             print("Nothing worked")
 
@@ -56,31 +59,84 @@ def fsm_node_creator(parameters: tuple, name_list: list[str] = None) -> FsmNode:
     )
 
 
-def fsm_node_walker(nodes: list[FsmNode], start_str: str) -> None:
+def fsm_node_walker(nodes: list[FsmNode], start_str: str, json_output: str) -> None:
 
-    print(start_str)
-    tmp_name = ""
-    start_node = fsm_node_creator(("name", "func"))
     llm = llm_sdk.Small_LLM_Model()
 
-    id = llm.encode(text=start_str)
-    print(id[0].tolist())
+    # print(start_str)
+
+    for node in nodes:
+        json_output = node.start(json_output)
+        print(start_str + json_output)
+        while True:
+            id = llm.encode(text=start_str + json_output)
+            logits = llm.get_logits_from_input_ids(id[0].tolist())
+            max_log = numpy.argmax(logits)
+            deco = llm.decode(max_log)
+            print(deco)
+            for c in deco:
+                if node.con_loop(c):
+                    json_output += c
+                    print("Loop")
+
+                elif node.con_next(c):
+                    json_output += c
+                    print("next")
+                    break
+                else:
+                    logits.pop(max_log)
+                    print("Skip")
+
+            else:
+                continue
+            break
+        json_output += node.end
+
+    print(start_str + json_output)
+
+
+
+
+def create_nodes(arg_list: list) -> list:
+    ls = []
+
+    for i, arg in enumerate(arg_list, start=1):
+        if i == 1:
+            arg = ('parameters: {"' + arg[0], arg[1])
+
+        elif i == len(arg_list):
+            arg = (arg[0], arg[1])
+
+        print(arg)
+        ls.append(fsm_node_creator(arg))
+    return ls
+
+
+def selecting_function_name(data: list, start_str: str) -> None:
+    json_output = '{"name": "'
+    start_node = fsm_node_creator(("name", "func"))
+
+    id = llm.encode(text=start_str + json_output)
     logits = llm.get_logits_from_input_ids(id[0].tolist())
-    print(logits[0])
-    max_log = numpy.argmax(logits)
-    print(max(logits))
-    print(logits[max_log])
-    print(llm.decode([max_log]))
 
-
-    # for node in nodes:
-    #     start_str = node.start()
-    #     # Give start_str to LLM
-    #     # Look at logits
-    #     # Pick out 5 best
-    #     # test loop then next
-
-    #     # Keep in mind that it should generally not be able to just skip.
+    deco = ""
+    while True:
+        max_log = numpy.argmax(logits)
+        deco += llm.decode(max_log)
+        print("deco: " + deco)
+        name = start_node.con_loop(deco, data)
+        print("name: " + name)
+        if name:
+            json_output += name.removeprefix(deco) + '",'
+            break
+        if name is None:
+            logits.pop(max_log)
+        if name == "":
+            json_output += deco
+            id = llm.encode(text=start_str + json_output)
+            logits = llm.get_logits_from_input_ids(id[0].tolist())
+            print(json_output)
+    return (name, json_output)
 
 
 def matches_uniq_str(prefix_str: str, name_list: list[str]) -> None | str:
@@ -115,8 +171,7 @@ def matches_uniq_str(prefix_str: str, name_list: list[str]) -> None | str:
 
 
 def start() -> None:
-    llm = llm_sdk.Small_LLM_Model()
-    prompt = "Hey, can you help me pick a colour for my house?"
+    prompt = "What is one plus one"
 
     t_instruction_prefix =\
     '''
@@ -141,9 +196,30 @@ def start() -> None:
 
     text = '<|im_start|>user\n' + prompt + '\n<|im_end|>\n'\
     '<|im_start|>assistant\n'\
-    '<tool_call>\n'\
-    '{"name": "'
-    fsm_node_walker(None, t_instruction_prefix + '{"name": addition, "arguments": {a: int}}' + t_instruction_suffix + text)
+    '<tool_call>\n'
+
+    data = func_def_loader()
+    func = str(data)
+
+    func_names = [i["name"] for i in data]
+
+    complete = t_instruction_prefix + func + t_instruction_suffix + text
 
 
+    # print(matches_uniq_str('fn', func_names))
+    selected_func = selecting_function_name(func_names, complete)
+
+    # print(selected_func[1])
+    args = []
+    for d in data:
+        if d["name"] == selected_func[0]:
+            for arg in d["parameters"].items():
+                args.append((arg[0], eval(arg[1]["type"])))
+    # print(args)
+    ls = create_nodes(args)
+    fsm_node_walker(ls, complete, selected_func[1])
+    exit()
+
+
+# print(matches_uniq_str("addition", ["addition", "subtraction", "cut"]))
 start()
