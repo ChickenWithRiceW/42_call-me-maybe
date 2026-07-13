@@ -6,25 +6,16 @@ import json
 import llm_sdk
 # from typing import Callable | Subject once said dont import from typing
 
+llm = llm_sdk.Small_LLM_Model()
 
-class FsmNode():
-    def __init__(self, start, end, con_loop, con_next, isfirst, islast):
-        self.start: Callable = start
-        self.end: Callable[[Any]] = end
-
-        self.isfirst: bool = isfirst
-        self.islast: bool = islast
-
-        self.con_loop: Callable[[str], bool] = con_loop
-        self.con_next: Callable[[str], bool] = con_next
 
 class Node:
-    def __init__(self, start:str , end: str, con_loop, con_next, isfirst: bool, islast: bool):
+    def __init__(self, start:str, end: str, isfirst: bool, islast: bool):
         if isfirst:
-            start = "{" + start
+            start = '"parameters": {' + start
 
         if islast:
-            end = end + "}"
+            end = end.replace(" ", "") + "}"
 
         self.start: str = start
         self.end: str = end
@@ -32,11 +23,13 @@ class Node:
         self.isfirst: bool = isfirst
         self.islast: bool = islast
 
+    # TODO: Either remove or make abstract method
     def con_loop(self, s: str) -> bool:
         pass
 
     def con_next(self, s: str) -> bool:
         pass
+
 
 class NodeInt(Node):
     def __init__(self, start, end, isfirst, islast):
@@ -62,7 +55,7 @@ class NodeStr(Node):
 
 
 
-
+# TODO: Either keep or remove
 def func_def_loader(file_name: str = "functions_definition.json") -> None:
     parameter: list = []
     try:
@@ -79,7 +72,7 @@ def fsm_node_creator(parameters: tuple, isfirst: bool, islast: bool) -> FsmNode:
     start = f'"{parameters[0]}": '
     match parameters[1]:
         case int.__class__():
-            end = None
+            end = " "
             return NodeInt(
                 start=start,
                 end=end,
@@ -88,36 +81,24 @@ def fsm_node_creator(parameters: tuple, isfirst: bool, islast: bool) -> FsmNode:
             )
 
         case str.__class__():
-            end = ","
+            end = ", "
             return NodeStr(
                 start=start,
                 end=end,
                 isfirst=isfirst,
                 islast=islast
             )
-        
-        case "func":
-            end = ","
-        case _:
-            print("Nothing worked")
-
-    return FsmNode(
-        start=start,
-        end=end,
-        isfirst=
-    )
+        # TODO: Extend functionality to match given func signature
 
 
-def fsm_node_walker(nodes: list[FsmNode], sys_instruction: str, json_output: str) -> None:
-    llm = llm_sdk.Small_LLM_Model()
-
+def fsm_node_walker(nodes: list[Node], sys_instruction: str, json_output: str) -> None:
     for node in nodes:
         # Inserting key
         json_output += node.start
 
         while True:
             ids = llm.encode(text=sys_instruction + json_output)
-            logits = llm.get_logits_from_input_ids(id[0].tolist())
+            logits = llm.get_logits_from_input_ids(ids[0].tolist())
             max_log = numpy.argmax(logits)
             decoded = llm.decode([max_log])
 
@@ -136,10 +117,37 @@ def fsm_node_walker(nodes: list[FsmNode], sys_instruction: str, json_output: str
                 continue
 
             break
+    print(json_output)
 
 
 
+def select_function(sys_instruction: str, json_output: str):
+    tmp_name = ""
     while True:
+        ids = llm.encode(text=sys_instruction + json_output + tmp_name)
+        logits = llm.get_logits_from_input_ids(ids[0].tolist())
+        max_log = numpy.argmax(logits)
+        decoded: str = llm.decode([max_log])
+
+        for c in decoded:
+            print(tmp_name)
+            if c.isalnum() or c == "_" or c == "-":
+                name = matches_uniq_str(tmp_name + c, ["fn_add_numbers", "fn_greet"])
+
+                if name:
+                    json_output += name + '", '
+                    break
+
+                elif name == "":
+                    tmp_name += c
+
+                elif name is None:
+                    logits.pop(max_log)
+                    break
+        else:
+            continue
+
+        return (name, json_output)
 
 
 
@@ -175,8 +183,7 @@ def matches_uniq_str(prefix_str: str, name_list: list[str]) -> None | str:
 
 
 def start() -> None:
-    llm = llm_sdk.Small_LLM_Model()
-    prompt = "Hey, can you help me pick a colour for my house?"
+    prompt = "What is 5+5?"
 
     t_instruction_prefix =\
     '''
@@ -202,8 +209,53 @@ def start() -> None:
     text = '<|im_start|>user\n' + prompt + '\n<|im_end|>\n'\
     '<|im_start|>assistant\n'\
     '<tool_call>\n'\
-    '{"name": "'
-    fsm_node_walker(None, t_instruction_prefix + '{"name": addition, "arguments": {a: int}}' + t_instruction_suffix + text)
+
+
+    functions =\
+'''\
+[
+    {
+        "name": "fn_add_numbers",
+        "description": "Add two numbers together and return their sum.",
+        "parameters": {
+            "a": {
+                "type": "number"
+            },
+            "b": {
+                "type": "number"
+            }
+        },
+        "returns": {
+            "type": "number"
+    },
+    {
+    "name": "none",
+    "description": "Pick if no usful function exist",
+    "parameters": {},
+    "returns": {
+        "type": "none"
+},
+}
+}'''
+    sys_instruction = t_instruction_prefix + functions + t_instruction_suffix + text
+
+
+    name, json_output = select_function(sys_instruction, '{"name": "')
+    print(json_output)
+
+    test = [("a", int), ("b", int)]
+
+    nodes = []
+    for i, t in enumerate(test, start=1):
+        if i == 1:
+            nodes.append(fsm_node_creator(t, True, False))
+        elif i == len(test):
+            nodes.append(fsm_node_creator(t, False, True))
+        else:
+            nodes.append(fsm_node_creator(t, False, False))
+
+    
+    fsm_node_walker(nodes, sys_instruction, json_output)
 
 
 start()
