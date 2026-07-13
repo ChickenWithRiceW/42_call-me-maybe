@@ -74,15 +74,27 @@ def func_def_loader(file_name: str = "functions_definition.json") -> None:
     return data
 
 
-def fsm_node_creator(parameters: tuple, name_list: list[str] = None) -> FsmNode:
+def fsm_node_creator(parameters: tuple, isfirst: bool, islast: bool) -> FsmNode:
     # Start will add key onto string
     start = f'"{parameters[0]}": '
     match parameters[1]:
         case int.__class__():
             end = None
+            return NodeInt(
+                start=start,
+                end=end,
+                isfirst=isfirst,
+                islast=islast
+            )
 
         case str.__class__():
             end = ","
+            return NodeStr(
+                start=start,
+                end=end,
+                isfirst=isfirst,
+                islast=islast
+            )
         
         case "func":
             end = ","
@@ -96,31 +108,39 @@ def fsm_node_creator(parameters: tuple, name_list: list[str] = None) -> FsmNode:
     )
 
 
-def fsm_node_walker(nodes: list[FsmNode], start_str: str) -> None:
-
-    print(start_str)
-    tmp_name = ""
-    start_node = fsm_node_creator(("name", "func"))
+def fsm_node_walker(nodes: list[FsmNode], sys_instruction: str, json_output: str) -> None:
     llm = llm_sdk.Small_LLM_Model()
 
-    id = llm.encode(text=start_str)
-    print(id[0].tolist())
-    logits = llm.get_logits_from_input_ids(id[0].tolist())
-    print(logits[0])
-    max_log = numpy.argmax(logits)
-    print(max(logits))
-    print(logits[max_log])
-    print(llm.decode([max_log]))
+    for node in nodes:
+        # Inserting key
+        json_output += node.start
+
+        while True:
+            ids = llm.encode(text=sys_instruction + json_output)
+            logits = llm.get_logits_from_input_ids(id[0].tolist())
+            max_log = numpy.argmax(logits)
+            decoded = llm.decode([max_log])
+
+            for c in decoded:
+                if node.con_loop(c):
+                    json_output += c
+
+                elif node.con_next(c):
+                    json_output += c + node.end
+                    break
+                
+                else:
+                    logits.pop(max_log)
+                    break
+            else:
+                continue
+
+            break
 
 
-    # for node in nodes:
-    #     start_str = node.start()
-    #     # Give start_str to LLM
-    #     # Look at logits
-    #     # Pick out 5 best
-    #     # test loop then next
 
-    #     # Keep in mind that it should generally not be able to just skip.
+    while True:
+
 
 
 def matches_uniq_str(prefix_str: str, name_list: list[str]) -> None | str:
