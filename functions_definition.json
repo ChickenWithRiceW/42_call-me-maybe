@@ -4,14 +4,14 @@
 		"description": "Add two numbers together and return their sum.",
 		"parameters": {
 			"a": {
-				"type": "number"
+				"type": "int"
 			},
 			"b": {
-				"type": "number"
+				"type": "int"
 			}
 		},
 		"returns": {
-			"type": "number"
+			"type": "int"
 		}
 	},
 	{
@@ -19,11 +19,11 @@
 		"description": "Generate a greeting message for a person by name.",
 		"parameters": {
 			"name": {
-				"type": "string"
+				"type": "str"
 			}
 		},
 		"returns": {
-			"type": "string"
+			"type": "str"
 		}
 	},
 	{
@@ -31,11 +31,11 @@
 		"description": "Reverse a string and return the reversed result.",
 		"parameters": {
 			"s": {
-				"type": "string"
+				"type": "str"
 			}
 		},
 		"returns": {
-			"type": "string"
+			"type": "str"
 		}
 	}
 ]
