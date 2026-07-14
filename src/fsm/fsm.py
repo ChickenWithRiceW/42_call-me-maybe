@@ -1,142 +1,173 @@
-from pydantic import BaseModel
+# from pydantic import BaseModel
 import numpy
-from collections.abc import Callable
-from typing import Any
-import json
+# from typing import Any
 import llm_sdk
+from abc import ABC, abstractmethod
 # from typing import Callable | Subject once said dont import from typing
+
+PARAMETER_KEY = '"parameters": {'
 
 llm = llm_sdk.Small_LLM_Model()
 
-class FsmNode():
-    def __init__(self, start, end, con_loop, con_next):
-        self.start: Callable = start
-        self.end: Callable[[Any]] = end
-        self.con_loop: Callable[[str], bool] = con_loop
-        self.con_next: Callable[[str], bool] = con_next
+
+# TODO: Maybe change conditions to regex patterns
+
+class Node(ABC):
+    def __init__(self, start: str, end: str, isfirst: bool, islast: bool):
+        if isfirst:
+            start = PARAMETER_KEY + start
+
+        if islast:
+            end = end.replace(",", "") + "}"
+
+        self.start: str = start
+        self.end: str = end
+
+        self.isfirst: bool = isfirst
+        self.islast: bool = islast
+
+    @abstractmethod
+    def con_loop(self, s: str) -> bool:
+        pass
+
+    @abstractmethod
+    def con_next(self, s: str) -> bool:
+        pass
 
 
-def func_def_loader(file_name: str = "functions_definition.json") -> None:
-    parameter: list = []
-    try:
-        with open(file_name, 'r') as file:
-            data: dict | list = json.load(file)
-    except FileNotFoundError as e:
-        print(e)
-        exit(1)
-    return data
+class NodeInt(Node):
+    def __init__(
+            self,
+            start: str,
+            end: str,
+            isfirst: bool,
+            islast: bool
+            ) -> None:
+        super().__init__(start, end, isfirst, islast)
+
+    def con_loop(self, s: str) -> bool:
+        return s.isdecimal()
+
+    def con_next(self, s: str) -> bool:
+        if self.islast:
+            return s == "}"
+        return s == ","
 
 
-def fsm_node_creator(parameters: tuple, name_list: list[str] = None) -> FsmNode:
+class NodeFloat(Node):
+    def __init__(
+            self,
+            start: str,
+            end: str,
+            isfirst: bool,
+            islast: bool
+            ) -> None:
+        super().__init__(start, end, isfirst, islast)
+
+    def con_loop(self, s: str) -> bool:
+        return s.isdecimal() or s == '.'
+
+    def con_next(self, s: str) -> bool:
+        if self.islast:
+            return s == "}"
+        return s == ","
+
+
+class NodeStr(Node):
+    def __init__(
+            self,
+            start: str,
+            end: str,
+            isfirst: bool,
+            islast: bool
+            ) -> None:
+
+        if islast:
+            end += "}"
+        super().__init__(start, end, isfirst, islast)
+
+    def con_loop(self, s: str) -> bool:
+        return s.isalnum()
+
+    def con_next(self, s: str) -> bool:
+        return s == '"'
+
+
+def fsm_node_creator(
+    parameters: tuple[str, str],
+    isfirst: bool,
+    islast: bool
+        ) -> Node:
+
     # Start will add key onto string
-    start = lambda s: s + f' "{parameters[0]}": '
-    global end
-    global con_loop
-    global con_next
+    start = f'"{parameters[0]}":'
     match parameters[1]:
-        case int.__class__():
-            con_loop = lambda c: c.isnumeric()
-            con_next = lambda c: c == ','
+        case "int":
             end = ""
+            return NodeInt(
+                start=start,
+                end=end,
+                isfirst=isfirst,
+                islast=islast
+            )
 
-        case str.__class__():
-            con_loop = lambda c: c.isalnum()
-            con_next = lambda c: c == '"'
-            end = ","
+        case "float":
+            end = ""
+            return NodeFloat(
+                start=start,
+                end=end,
+                isfirst=isfirst,
+                islast=islast
+            )
 
-        case "func":
-            con_loop = matches_uniq_str
-            con_next = lambda c: c == '"'
+        case "str":
             end = ","
+            return NodeStr(
+                start=start + '"',
+                end=end,
+                isfirst=isfirst,
+                islast=islast
+            )
         case _:
-            print("Nothing worked")
-
-    return FsmNode(
-        start=start,
-        end=end,
-        con_loop=con_loop,
-        con_next=con_next
-    )
+            print("Issue..")
+            exit()
+        # TODO: Extend functionality to match given func signature
 
 
-def fsm_node_walker(nodes: list[FsmNode], start_str: str, json_output: str) -> None:
-
-    llm = llm_sdk.Small_LLM_Model()
-
-    # print(start_str)
+def fsm_node_walker(
+        nodes: list[Node],
+        sys_instruction: str,
+        json_output: str
+        ) -> None:
 
     for node in nodes:
-        json_output = node.start(json_output)
-        print(start_str + json_output)
+        # Inserting key
+        json_output += node.start
+        print(json_output)
+
         while True:
-            id = llm.encode(text=start_str + json_output)
-            logits = llm.get_logits_from_input_ids(id[0].tolist())
+            ids = llm.encode(text=sys_instruction + json_output)
+            logits = llm.get_logits_from_input_ids(ids[0].tolist())
             max_log = numpy.argmax(logits)
-            deco = llm.decode(max_log)
-            print(deco)
-            for c in deco:
+            decoded = llm.decode([max_log])
+
+            print(decoded)
+            for c in decoded:
                 if node.con_loop(c):
                     json_output += c
-                    print("Loop")
 
                 elif node.con_next(c):
-                    json_output += c
-                    print("next")
+                    json_output += c + node.end
                     break
+
                 else:
                     logits.pop(max_log)
-                    print("Skip")
-
+                    break
             else:
                 continue
+
             break
-        json_output += node.end
-
-    print(start_str + json_output)
-
-
-
-
-def create_nodes(arg_list: list) -> list:
-    ls = []
-
-    for i, arg in enumerate(arg_list, start=1):
-        if i == 1:
-            arg = ('parameters: {"' + arg[0], arg[1])
-
-        elif i == len(arg_list):
-            arg = (arg[0], arg[1])
-
-        print(arg)
-        ls.append(fsm_node_creator(arg))
-    return ls
-
-
-def selecting_function_name(data: list, start_str: str) -> None:
-    json_output = '{"name": "'
-    start_node = fsm_node_creator(("name", "func"))
-
-    id = llm.encode(text=start_str + json_output)
-    logits = llm.get_logits_from_input_ids(id[0].tolist())
-
-    deco = ""
-    while True:
-        max_log = numpy.argmax(logits)
-        deco += llm.decode(max_log)
-        print("deco: " + deco)
-        name = start_node.con_loop(deco, data)
-        print("name: " + name)
-        if name:
-            json_output += name.removeprefix(deco) + '",'
-            break
-        if name is None:
-            logits.pop(max_log)
-        if name == "":
-            json_output += deco
-            id = llm.encode(text=start_str + json_output)
-            logits = llm.get_logits_from_input_ids(id[0].tolist())
-            print(json_output)
-    return (name, json_output)
+    print(json_output)
 
 
 def matches_uniq_str(prefix_str: str, name_list: list[str]) -> None | str:
@@ -158,7 +189,7 @@ def matches_uniq_str(prefix_str: str, name_list: list[str]) -> None | str:
             count += 1
             selected_name = name
 
-    # Does not match
+    # Does not match anything
     if count == 0:
         return None
 
@@ -168,58 +199,3 @@ def matches_uniq_str(prefix_str: str, name_list: list[str]) -> None | str:
 
     # Matches uniq name
     return selected_name
-
-
-def start() -> None:
-    prompt = "What is one plus one"
-
-    t_instruction_prefix =\
-    '''
-    <|im_start|>system\n
-    You are provided with function signatures 
-    within <tools></tools> XML tags:\n
-    <tools>\n
-
-    '''
-
-    t_instruction_suffix =\
-    '''
-    </tools>\n
-    For each function call, return a json
-    object within <tool_call></tool_call> tags:\n
-    <tool_call>\n
-    {"name": <function-name>, "arguments": <args-json-object>}\n
-    </tool_call>\n
-    <|im_end|>\n
-    '''
-
-
-    text = '<|im_start|>user\n' + prompt + '\n<|im_end|>\n'\
-    '<|im_start|>assistant\n'\
-    '<tool_call>\n'
-
-    data = func_def_loader()
-    func = str(data)
-
-    func_names = [i["name"] for i in data]
-
-    complete = t_instruction_prefix + func + t_instruction_suffix + text
-
-
-    # print(matches_uniq_str('fn', func_names))
-    selected_func = selecting_function_name(func_names, complete)
-
-    # print(selected_func[1])
-    args = []
-    for d in data:
-        if d["name"] == selected_func[0]:
-            for arg in d["parameters"].items():
-                args.append((arg[0], eval(arg[1]["type"])))
-    # print(args)
-    ls = create_nodes(args)
-    fsm_node_walker(ls, complete, selected_func[1])
-    exit()
-
-
-# print(matches_uniq_str("addition", ["addition", "subtraction", "cut"]))
-start()

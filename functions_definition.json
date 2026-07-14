@@ -15,6 +15,21 @@
 		}
 	},
 	{
+		"name": "fn_add_float_numbers",
+		"description": "Add two float numbers together and return their sum.",
+		"parameters": {
+			"a": {
+				"type": "float"
+			},
+			"b": {
+				"type": "float"
+			}
+		},
+		"returns": {
+			"type": "float"
+		}
+	},
+	{
 		"name": "fn_greet",
 		"description": "Generate a greeting message for a person by name.",
 		"parameters": {
@@ -37,5 +52,13 @@
 		"returns": {
 			"type": "str"
 		}
+	},
+	{
+	"name": "none",
+	"description": "Pick this function if nothing fits.",
+	"parameters": {},
+	"returns": {
+		"type": "none"
+	}
 	}
 ]
