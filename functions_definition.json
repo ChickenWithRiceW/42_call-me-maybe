@@ -42,8 +42,50 @@
 		}
 	},
 	{
+		"name": "bigAssFunction",
+		"description": "Checks if given name is in a big string and depnding on if case is set to true or false tests it case sensetive",
+		"parameters": {
+			"name": {
+				"type": "str"
+			},
+			"bigString": {
+				"type": "str"
+			},
+			"case": {
+				"type": "bool"
+			}
+		},
+		"returns": {
+			"type": "str"
+		}
+	},
+	{
 		"name": "fn_reverse_string",
 		"description": "Reverse a string and return the reversed result.",
+		"parameters": {
+			"s": {
+				"type": "str"
+			}
+		},
+		"returns": {
+			"type": "str"
+		}
+	},
+	{
+		"name": "isTrue",
+		"description": "Checks if given bool is true",
+		"parameters": {
+			"s": {
+				"type": "bool"
+			}
+		},
+		"returns": {
+			"type": "bool"
+		}
+	},
+	{
+		"name": "get_weather",
+		"description": "Gets weather of input location",
 		"parameters": {
 			"s": {
 				"type": "str"

@@ -68,9 +68,11 @@ def select_function(
         function_names: list[str]):
 
     tmp_name = ""
+    pre_shit = llm.encode(text=sys_instruction)[0].tolist() 
     while True:
-        ids = llm.encode(text=sys_instruction + json_output + tmp_name)
-        logits = llm.get_logits_from_input_ids(ids[0].tolist())
+        ids = llm.encode(json_output + tmp_name)
+        logits = llm.get_logits_from_input_ids(pre_shit + list(ids[0]))
+        # print("logits: ", type(logits))
         max_log = numpy.argmax(logits)
         decoded: str = llm.decode([max_log])
 
@@ -82,7 +84,7 @@ def select_function(
 
             if name:
                 json_output += name + '",'
-                exit()
+                # exit()
                 return (name, json_output)
 
             elif name == "":
@@ -100,6 +102,6 @@ def select_function(
 
 
 if __name__ == "__main__":
-    # start(input("Prompt: "))
-    start("What is 5+5")
+    start(input("Prompt: "))
+    # start('check if the string "paul" is in the big string "max,tiger,paul" not casesensetive')
     # print("nothing done...")

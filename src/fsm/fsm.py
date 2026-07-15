@@ -90,10 +90,32 @@ class NodeStr(Node):
         super().__init__(start, end, isfirst, islast)
 
     def con_loop(self, s: str) -> bool:
-        return s != '"'
+        return re.fullmatch(r"^[A-Za-z-,!? 0-9]+$", s)
 
     def con_next(self, s: str) -> bool:
         return s == '"'
+
+
+class NodeBool(Node):
+    def __init__(
+            self,
+            start: str,
+            end: str,
+            isfirst: bool,
+            islast: bool
+            ) -> None:
+        super().__init__(start, end, isfirst, islast)
+
+    def con_loop(self, s: str) -> bool:
+        return False
+
+    def con_next(self, s: str) -> bool:
+        if self.islast:
+            self.end = "}"
+        if s == "t":
+            return "true" + self.end
+        if s == "f":
+            return "false" + self.end
 
 
 def fsm_node_creator(
@@ -131,6 +153,14 @@ def fsm_node_creator(
                 isfirst=isfirst,
                 islast=islast
             )
+        case "bool":
+            end = ","
+            return NodeBool(
+                start=start,
+                end=end,
+                isfirst=isfirst,
+                islast=islast
+            )
         case _:
             print("Issue..")
             exit()
@@ -149,31 +179,47 @@ def fsm_node_walker(
         print(json_output)
 
         test = ""
+        ids = llm.encode(text=sys_instruction + json_output)
+        logits = llm.get_logits_from_input_ids(ids[0].tolist())
         while True:
-            ids = llm.encode(text=sys_instruction + json_output)
-            logits = llm.get_logits_from_input_ids(ids[0].tolist())
+            pop = False
             max_log = numpy.argmax(logits)
             decoded = llm.decode([max_log])
 
             print("decoded: ", decoded)
             for c in decoded:
+                print(c)
                 test += c
                 if node.con_loop(test):
                     json_output += c
+                    print("loop")
+                    continue
 
                 elif node.con_next(c):
-                    json_output += c + node.end
+                    print("next")
+                    auto = node.con_next(c)
+                    print(type(auto))
+                    if isinstance(auto, bool):
+                        json_output += c + node.end
+                    else:
+                        json_output += auto + node.end
                     break
 
                 else:
                     logits.pop(max_log)
+                    print("pop")    # Needs fixing for edge case
+                    pop = True
                     break
+                
             else:
+                ids = llm.encode(text=sys_instruction + json_output)
+                logits = llm.get_logits_from_input_ids(ids[0].tolist())
                 # test = ""
                 continue
 
             test = ""
-            break
+            if not pop:
+                break
     print(json_output)
     return json_output
 
