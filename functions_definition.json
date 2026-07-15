@@ -1,6 +1,6 @@
 [
 	{
-		"name": "fn_add_numbers",
+		"name": "fn_add_int",
 		"description": "Add two numbers together and return their sum.",
 		"parameters": {
 			"a": {
@@ -15,7 +15,7 @@
 		}
 	},
 	{
-		"name": "fn_add_float_numbers",
+		"name": "fn_add_float",
 		"description": "Add two float numbers together and return their sum.",
 		"parameters": {
 			"a": {

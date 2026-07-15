@@ -3,11 +3,14 @@ import numpy
 # from typing import Any
 import llm_sdk
 from abc import ABC, abstractmethod
+import re
+# from main import llm
 # from typing import Callable | Subject once said dont import from typing
 
-PARAMETER_KEY = '"parameters": {'
+PARAMETER_KEY = '"parameters":{'
 
-llm = llm_sdk.Small_LLM_Model()
+from fuck import llm
+# llm = llm_sdk.Small_LLM_Model()
 
 
 # TODO: Maybe change conditions to regex patterns
@@ -46,7 +49,7 @@ class NodeInt(Node):
         super().__init__(start, end, isfirst, islast)
 
     def con_loop(self, s: str) -> bool:
-        return s.isdecimal()
+        return re.fullmatch(r'^(-?)([0-9]|$)+$', s)
 
     def con_next(self, s: str) -> bool:
         if self.islast:
@@ -65,7 +68,7 @@ class NodeFloat(Node):
         super().__init__(start, end, isfirst, islast)
 
     def con_loop(self, s: str) -> bool:
-        return s.isdecimal() or s == '.'
+        return re.fullmatch(r"^(-?)([0-9]|$)+(\.?)+([0-9]|$)+$", s)
 
     def con_next(self, s: str) -> bool:
         if self.islast:
@@ -87,7 +90,7 @@ class NodeStr(Node):
         super().__init__(start, end, isfirst, islast)
 
     def con_loop(self, s: str) -> bool:
-        return s.isalnum()
+        return s != '"'
 
     def con_next(self, s: str) -> bool:
         return s == '"'
@@ -145,15 +148,17 @@ def fsm_node_walker(
         json_output += node.start
         print(json_output)
 
+        test = ""
         while True:
             ids = llm.encode(text=sys_instruction + json_output)
             logits = llm.get_logits_from_input_ids(ids[0].tolist())
             max_log = numpy.argmax(logits)
             decoded = llm.decode([max_log])
 
-            print(decoded)
+            print("decoded: ", decoded)
             for c in decoded:
-                if node.con_loop(c):
+                test += c
+                if node.con_loop(test):
                     json_output += c
 
                 elif node.con_next(c):
@@ -164,10 +169,13 @@ def fsm_node_walker(
                     logits.pop(max_log)
                     break
             else:
+                # test = ""
                 continue
 
+            test = ""
             break
     print(json_output)
+    return json_output
 
 
 def matches_uniq_str(prefix_str: str, name_list: list[str]) -> None | str:

@@ -1,11 +1,11 @@
-ENTRY = example.py
-CONFIG = example.txt
+ENTRY = main
+CONFIG = ""
 
 install:
 	uv sync
 
 run: install
-	uv run python $(ENTRY) $(CONFIG)
+	uv run python -m $(ENTRY) $(CONFIG)
 
 debug: install
 	uv run python -m pdb $(ENTRY) $(CONFIG)

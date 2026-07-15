@@ -16,8 +16,8 @@ object within <tool_call></tool_call> tags:\n
 <|im_end|>\n
 '''
 
-    text = '''\
-<|im_start|>user\n' + prompt + '\n<|im_end|>\n'\
+    text = f'''\
+<|im_start|>user {prompt} <|im_end|>\n'\
 <|im_start|>assistant\n'\
 <tool_call>\n'''
 
