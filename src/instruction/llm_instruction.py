@@ -1,8 +1,14 @@
 def get_llm_instruction(prompt: str, function_def: str) -> str:
     t_instruction_prefix = '''\
 <|im_start|>system
+You are a smart AI function calling tool.
 You are provided with function signatures \
-within <tools></tools> XML tags you will pick a function that you think makes in the context of what the user has given you. Make sure that if you are unsure about or dont know what function to pick to default to none. Also make sure that you pick the function in a sense that as an example if the user gives in a int and a float to add together to pick a function that supports it or cast both to the same type without losing data:
+within <tools></tools> XML tags you will pick a function from the list,
+that makes 100% sense given the prompt of the user.
+Make sure to pick the fallback function 'none' when \
+there is not a clear function to pick.
+You will also cast values into appropriate values if \
+no data lost accurse like a int to a float.
 <tools>\n
 '''
 

@@ -8,7 +8,6 @@ import json
 import llm_sdk
 from typing import Any
 
-
 JSON_START = '{"name":"'
 
 
@@ -51,7 +50,7 @@ def main() -> None:
     prompts = prompt_json_loader(args.input)
 
     llm = llm_sdk.Small_LLM_Model()
-    
+
     json_result = []
     for prompt in prompts:
         result = {"prompt": prompt}
@@ -79,6 +78,7 @@ def prompt_parser(
     sys_instruction = get_llm_instruction(prompt, str(func_def_list))
 
     # Let LLM select function to call
+    print(f"\nAI selecting function for prompt: '{prompt}'")
     selected_name, json_output = select_function(
         sys_instruction,
         JSON_START,
@@ -119,11 +119,13 @@ def select_function(
         decoded: str = llm.decode([int(max_log)])
 
         for i, c in enumerate(decoded):
+            print(json_output + name_build)
             name = matches_uniq_str(name_build + c, function_names)
 
             # If only one function matches, autocomplete it.
             if name:
                 json_output += name + '",'
+                print(json_output)
                 return (name, json_output)
 
             # If not uniq yet, keep building name
