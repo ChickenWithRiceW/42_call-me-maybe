@@ -1,18 +1,24 @@
 import json
 
 
-def __init__(self) -> None:
-    self.names
-
-
-def func_def_loader(file_name: str = "functions_definition.json") -> list:
+def func_def_loader(file_name: str) -> list:
     try:
         with open(file_name, 'r') as file:
             data: list = json.load(file)
+            return data
     except FileNotFoundError as e:
         print(e)
         exit(1)
-    return data
+
+
+def prompt_json_loader(file_name: str):
+    try:
+        with open(file_name, 'r') as file:
+            prompt_list: list = json.load(file)
+            return [prompt["prompt"] for prompt in prompt_list]
+    except FileNotFoundError as e:
+        print(e)
+        exit(1)
 
 
 def get_arguments_from_func(func_name: str, func_def_list: list[str]) -> list:

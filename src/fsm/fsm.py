@@ -1,19 +1,13 @@
-# from pydantic import BaseModel
+from pydantic import BaseModel
 import numpy
-# from typing import Any
+from typing import Any
 import llm_sdk
 from abc import ABC, abstractmethod
 import re
-# from main import llm
-# from typing import Callable | Subject once said dont import from typing
 
 PARAMETER_KEY = '"parameters":{'
+SUPPORTED_TYPES = {"int", "float", "str", "bool"}
 
-from fuck import llm
-# llm = llm_sdk.Small_LLM_Model()
-
-
-# TODO: Maybe change conditions to regex patterns
 
 class Node(ABC):
     def __init__(self, start: str, end: str, isfirst: bool, islast: bool):
@@ -30,11 +24,11 @@ class Node(ABC):
         self.islast: bool = islast
 
     @abstractmethod
-    def con_loop(self, s: str) -> bool:
+    def con_loop(self, s: str) -> Any:
         pass
 
     @abstractmethod
-    def con_next(self, s: str) -> bool:
+    def con_next(self, s: str) -> Any:
         pass
 
 
@@ -49,7 +43,7 @@ class NodeInt(Node):
         super().__init__(start, end, isfirst, islast)
 
     def con_loop(self, s: str) -> bool:
-        return re.fullmatch(r'^(-?)([0-9]|$)+$', s)
+        return bool(re.fullmatch(r'^(-?)([0-9]|$)+$', s))
 
     def con_next(self, s: str) -> bool:
         if self.islast:
@@ -68,7 +62,7 @@ class NodeFloat(Node):
         super().__init__(start, end, isfirst, islast)
 
     def con_loop(self, s: str) -> bool:
-        return re.fullmatch(r"^(-?)([0-9]|$)+(\.?)+([0-9]|$)+$", s)
+        return bool(re.fullmatch(r"^(-?)([0-9]|$)+(\.?)+([0-9]|$)+$", s))
 
     def con_next(self, s: str) -> bool:
         if self.islast:
@@ -90,7 +84,7 @@ class NodeStr(Node):
         super().__init__(start, end, isfirst, islast)
 
     def con_loop(self, s: str) -> bool:
-        return re.fullmatch(r"^[A-Za-z-,!? 0-9]+$", s)
+        return bool(re.fullmatch(r"^[A-Za-z-,!? 0-9]+$", s))
 
     def con_next(self, s: str) -> bool:
         return s == '"'
@@ -104,18 +98,19 @@ class NodeBool(Node):
             isfirst: bool,
             islast: bool
             ) -> None:
+        if self.islast:
+            self.end = "}"
         super().__init__(start, end, isfirst, islast)
 
     def con_loop(self, s: str) -> bool:
         return False
 
-    def con_next(self, s: str) -> bool:
-        if self.islast:
-            self.end = "}"
+    def con_next(self, s: str) -> str | bool:
         if s == "t":
             return "true" + self.end
         if s == "f":
             return "false" + self.end
+        return False
 
 
 def fsm_node_creator(
@@ -162,65 +157,58 @@ def fsm_node_creator(
                 islast=islast
             )
         case _:
-            print("Issue..")
+            print(f"{parameters[1]} is not supported")
+            print(f"Supported: {SUPPORTED_TYPES}")
             exit()
-        # TODO: Extend functionality to match given func signature
 
 
 def fsm_node_walker(
         nodes: list[Node],
         sys_instruction: str,
-        json_output: str
-        ) -> None:
+        json_output: str,
+        llm: llm_sdk.Small_LLM_Model
+        ) -> str:
 
     for node in nodes:
-        # Inserting key
         json_output += node.start
-        print(json_output)
 
-        test = ""
+        build_str = ""
         ids = llm.encode(text=sys_instruction + json_output)
         logits = llm.get_logits_from_input_ids(ids[0].tolist())
+
         while True:
             pop = False
             max_log = numpy.argmax(logits)
-            decoded = llm.decode([max_log])
+            decoded = llm.decode([int(max_log)])
 
-            print("decoded: ", decoded)
             for c in decoded:
-                print(c)
-                test += c
-                if node.con_loop(test):
+                build_str += c
+                if node.con_loop(build_str):
                     json_output += c
-                    print("loop")
                     continue
 
                 elif node.con_next(c):
-                    print("next")
-                    auto = node.con_next(c)
-                    print(type(auto))
-                    if isinstance(auto, bool):
+                    auto_complete = node.con_next(c)
+
+                    if isinstance(auto_complete, bool):
                         json_output += c + node.end
                     else:
-                        json_output += auto + node.end
+                        json_output += auto_complete + node.end
                     break
 
                 else:
                     logits.pop(max_log)
-                    print("pop")    # Needs fixing for edge case
                     pop = True
                     break
                 
             else:
                 ids = llm.encode(text=sys_instruction + json_output)
                 logits = llm.get_logits_from_input_ids(ids[0].tolist())
-                # test = ""
                 continue
 
-            test = ""
+            build_str = ""
             if not pop:
                 break
-    print(json_output)
     return json_output
 
 

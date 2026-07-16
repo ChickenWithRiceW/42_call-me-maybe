@@ -1,17 +1,32 @@
 [
 	{
-		"name": "fn_add_numbers",
+		"name": "fn_add_int",
 		"description": "Add two numbers together and return their sum.",
 		"parameters": {
 			"a": {
-				"type": "number"
+				"type": "int"
 			},
 			"b": {
-				"type": "number"
+				"type": "int"
 			}
 		},
 		"returns": {
-			"type": "number"
+			"type": "int"
+		}
+	},
+	{
+		"name": "fn_add_float",
+		"description": "Add two float numbers together and return their sum.",
+		"parameters": {
+			"a": {
+				"type": "float"
+			},
+			"b": {
+				"type": "float"
+			}
+		},
+		"returns": {
+			"type": "float"
 		}
 	},
 	{
@@ -19,11 +34,29 @@
 		"description": "Generate a greeting message for a person by name.",
 		"parameters": {
 			"name": {
-				"type": "string"
+				"type": "str"
 			}
 		},
 		"returns": {
-			"type": "string"
+			"type": "str"
+		}
+	},
+	{
+		"name": "bigAssFunction",
+		"description": "Checks if given name is in a big string and depnding on if case is set to true or false tests it case sensetive",
+		"parameters": {
+			"name": {
+				"type": "str"
+			},
+			"bigString": {
+				"type": "str"
+			},
+			"case": {
+				"type": "bool"
+			}
+		},
+		"returns": {
+			"type": "str"
 		}
 	},
 	{
@@ -31,11 +64,43 @@
 		"description": "Reverse a string and return the reversed result.",
 		"parameters": {
 			"s": {
-				"type": "string"
+				"type": "str"
 			}
 		},
 		"returns": {
-			"type": "string"
+			"type": "str"
 		}
+	},
+	{
+		"name": "isTrue",
+		"description": "Checks if given bool is true",
+		"parameters": {
+			"s": {
+				"type": "bool"
+			}
+		},
+		"returns": {
+			"type": "bool"
+		}
+	},
+	{
+		"name": "get_weather",
+		"description": "Gets weather of input location",
+		"parameters": {
+			"s": {
+				"type": "str"
+			}
+		},
+		"returns": {
+			"type": "str"
+		}
+	},
+	{
+	"name": "none",
+	"description": "Pick this function if nothing fits.",
+	"parameters": {},
+	"returns": {
+		"type": "none"
+	}
 	}
 ]

@@ -1,4 +1,4 @@
-def get_llm_instruction(prompt: str, function_def: list[str]):
+def get_llm_instruction(prompt: str, function_def: str) -> str:
     t_instruction_prefix = '''\
 <|im_start|>system
 You are provided with function signatures \
