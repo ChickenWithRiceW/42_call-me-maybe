@@ -33,7 +33,7 @@ FUNC_SCHEMA = {
                     "properties": {
                         "type": {
                             "type": "string",
-                            "enum": ["int", "float", "str", "bool", "none"],
+                            "enum": ["integer", "float", "string", "boolean", "none"],
                         }
                     },
                     "additionalProperties": False,
@@ -45,7 +45,7 @@ FUNC_SCHEMA = {
                 "properties": {
                     "type": {
                         "type": "string",
-                        "enum": ["int", "float", "str", "bool", "none"],
+                        "enum": ["integer", "float", "string", "boolean", "none"],
                     }
                 },
                 "additionalProperties": False,

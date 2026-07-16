@@ -12,6 +12,6 @@
 	"prompt": "Greet john"
 	},
 	{
-	"pfompt": "Reverse the string 'hello'"
+	"prompt": "Reverse the string 'hello'"
 	}
 ]

@@ -4,14 +4,14 @@
 		"description": "Add two numbers together and return their sum.",
 		"parameters": {
 			"a": {
-				"type": "int"
+				"type": "integer"
 			},
 			"b": {
-				"type": "int"
+				"type": "integer"
 			}
 		},
 		"returns": {
-			"type": "int"
+			"type": "integer"
 		}
 	},
 	{
@@ -34,11 +34,11 @@
 		"description": "Generate a greeting message for a person by name.",
 		"parameters": {
 			"name": {
-				"type": "str"
+				"type": "string"
 			}
 		},
 		"returns": {
-			"type": "str"
+			"type": "string"
 		}
 	},
 	{
@@ -46,17 +46,17 @@
 		"description": "Checks if given name is in a big string and depnding on if case is set to true or false tests it case sensetive",
 		"parameters": {
 			"name": {
-				"type": "str"
+				"type": "string"
 			},
 			"bigString": {
-				"type": "str"
+				"type": "string"
 			},
 			"case": {
-				"type": "bool"
+				"type": "boolean"
 			}
 		},
 		"returns": {
-			"type": "str"
+			"type": "string"
 		}
 	},
 	{
@@ -64,11 +64,11 @@
 		"description": "Reverse a string and return the reversed result.",
 		"parameters": {
 			"s": {
-				"type": "str"
+				"type": "string"
 			}
 		},
 		"returns": {
-			"type": "str"
+			"type": "string"
 		}
 	},
 	{
@@ -76,11 +76,11 @@
 		"description": "Checks if given bool is true",
 		"parameters": {
 			"s": {
-				"type": "bool"
+				"type": "boolean"
 			}
 		},
 		"returns": {
-			"type": "bool"
+			"type": "boolean"
 		}
 	},
 	{
@@ -88,11 +88,11 @@
 		"description": "Gets weather of input location",
 		"parameters": {
 			"s": {
-				"type": "str"
+				"type": "string"
 			}
 		},
 		"returns": {
-			"type": "str"
+			"type": "string"
 		}
 	},
 	{

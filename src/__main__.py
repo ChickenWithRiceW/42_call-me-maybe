@@ -12,6 +12,7 @@ JSON_START = '{"name":"'
 
 
 def main() -> None:
+    """Entry point for loading json definitons and walking trough given prompts"""
     p = argparse.ArgumentParser(
         prog="Call me maybe",
         description="Function calling LLM"
@@ -38,6 +39,12 @@ def main() -> None:
         metavar=""
     )
 
+    p.add_argument(
+        "-m",
+        help="Enter own prompt",
+        action='store_true'
+    )
+
     args = p.parse_args()
 
     # Load function definitions
@@ -46,8 +53,11 @@ def main() -> None:
     # Extract only function names
     func_names = [i["name"] for i in func_def_list]
 
-    # Get prompts
-    prompts = prompt_json_loader(args.input)
+    if not args.m:
+        # Get prompts
+        prompts = prompt_json_loader(args.input)
+    else:
+        prompts = [input("Prompt: ")]
 
     llm = llm_sdk.Small_LLM_Model()
 
@@ -73,7 +83,17 @@ def prompt_parser(
         func_names: list[str],
         llm: llm_sdk.Small_LLM_Model
         ) -> Any:
+    """Parses all given prompts and outputs a list of the finished json function call
 
+    Args:
+        prompt (str): The user prompt
+        func_def_list (list[str]): A list of all the function definitions
+        func_names (list[str]): A list of only function names
+        llm (llm_sdk.Small_LLM_Model): LLM instance
+
+    Returns:
+        Any: Json in the function calling schema
+    """
     # Construct system prompt with function definitions
     sys_instruction = get_llm_instruction(prompt, str(func_def_list))
 
@@ -108,7 +128,17 @@ def select_function(
         function_names: list[str],
         llm: llm_sdk.Small_LLM_Model
         ) -> tuple[str, str]:
+    """Lets the LLM pick out a function name and returns its selection
 
+    Args:
+        sys_instruction (str): The system instructions for the LLM
+        json_output (str): Blueprint for the json output
+        function_names (list[str]): A list of all given function names
+        llm (llm_sdk.Small_LLM_Model): the llm instance
+
+    Returns:
+        tuple[str, str]: Tuple containing the selected function name with the json output
+    """
     name_build = ""
     tok_sys_prompt = llm.encode(text=sys_instruction)[0].tolist()
 

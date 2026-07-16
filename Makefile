@@ -1,14 +1,16 @@
-ENTRY = main
-CONFIG = ""
+ENTRY = src
 
 install:
 	uv sync
 
 run: install
-	uv run python -m $(ENTRY) $(CONFIG)
+	uv run python -m $(ENTRY)
+
+run-prompt: install
+	uv run python -m $(ENTRY) -m
 
 debug: install
-	uv run python -m pdb $(ENTRY) $(CONFIG)
+	uv run python -m pdb $(ENTRY)
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} +

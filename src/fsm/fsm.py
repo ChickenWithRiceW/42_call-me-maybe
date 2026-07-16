@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+# from pydantic import BaseModel
 import numpy
 from typing import Any
 import llm_sdk
@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import re
 
 PARAMETER_KEY = '"parameters":{'
-SUPPORTED_TYPES = {"int", "float", "str", "bool"}
+SUPPORTED_TYPES = {"integer", "float", "string", "boolean"}
 
 
 class Node(ABC):
@@ -122,7 +122,7 @@ def fsm_node_creator(
     # Start will add key onto string
     start = f'"{parameters[0]}":'
     match parameters[1]:
-        case "int":
+        case "integer":
             end = ""
             return NodeInt(
                 start=start,
@@ -140,7 +140,7 @@ def fsm_node_creator(
                 is_last=is_last
             )
 
-        case "str":
+        case "string":
             end = ","
             return NodeStr(
                 start=start + '"',
@@ -148,7 +148,7 @@ def fsm_node_creator(
                 is_first=is_first,
                 is_last=is_last
             )
-        case "bool":
+        case "boolean":
             end = ","
             return NodeBool(
                 start=start,
