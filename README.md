@@ -182,7 +182,7 @@ If the character is fully invalid it sets the logit to `-inf` in order to mark i
 
 #### This approach is not what constrained decoding is about. Constrained decoding would validate the tokens from the LLM before letting it pick them.
 --------
-![Progress](docs/draw.io/my.drawio.svg)
+![Progress](docs/draw.io/explain.drawio.svg)
 
 ### Why am I doing it differently?
 If you would do the tradition constrained decoding you would use more tokens as you DO NOT autocomplete known keys but only constrain the LLM to write them correctly. Trough this approach you use more tokens other then autocompleting keys that you already know about.
