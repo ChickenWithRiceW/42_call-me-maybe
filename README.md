@@ -2,8 +2,8 @@
 
 # Call Me Maybe
 
-[!NOTE]
-This project was fully done without AI usage. Meaning no AI has been used for help in the coding process or research.
+> [!NOTE]
+> This project was fully done without AI usage. Meaning no AI has been used for help in the coding process or research.
 
 ## Description
 
