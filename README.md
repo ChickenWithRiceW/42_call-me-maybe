@@ -177,6 +177,8 @@ The programm supports multiple arguments on run
 ![overview](docs/draw.io/fsm.drawio.svg)
 
 This approach is not what constrained decoding would do. Constrained decoding would validate the tokens from the LLM before letting it pick them. With this approach that picks the usual best token while going trough it character by character and is more flexible that filtering out tokens beforehand.
+--------
+![overview](docs/draw.io/my.drawio.svg)
 
 
 
