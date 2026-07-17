@@ -2,7 +2,8 @@
 
 # Call Me Maybe
 
-[!NOTE] This project was fully done without AI usage. Meaning no AI has been used for help in the coding process or research.
+[!NOTE]
+This project was fully done without AI usage. Meaning no AI has been used for help in the coding process or research.
 
 ## Description
 
@@ -178,7 +179,7 @@ The programm supports multiple arguments on run
 
 This approach is not what constrained decoding would do. Constrained decoding would validate the tokens from the LLM before letting it pick them. With this approach that picks the usual best token while going trough it character by character and is more flexible that filtering out tokens beforehand.
 --------
-![overview](docs/draw.io/my.drawio.svg)
+![Progress](docs/draw.io/my.drawio.svg)
 
 
 
