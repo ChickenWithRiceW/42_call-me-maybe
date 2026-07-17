@@ -79,6 +79,9 @@ def func_def_loader(file_name: str) -> list[dict[str, Any]]:
     except ValidationError as e:
         print(f"{e.message}. Error in {file_name}")
         exit(1)
+    except json.decoder.JSONDecodeError:
+        print(f"Invalid {file_name} json")
+        exit(1)
 
 
 def prompt_json_loader(file_name: str) -> list[str]:
