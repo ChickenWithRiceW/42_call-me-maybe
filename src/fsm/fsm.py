@@ -1,4 +1,4 @@
-# from pydantic import BaseModel
+from pydantic import BaseModel
 import numpy
 from typing import Any
 import llm_sdk
@@ -9,19 +9,19 @@ PARAMETER_KEY = '"parameters":{'
 SUPPORTED_TYPES = {"integer", "float", "string", "boolean"}
 
 
-class Node(ABC):
-    def __init__(self, start: str, end: str, is_first: bool, is_last: bool):
-        if is_first:
-            start = PARAMETER_KEY + start
+class Node(ABC, BaseModel):
+    start: str
+    end: str
 
-        if is_last:
-            end = end.replace(",", "") + "}"
+    is_first: bool
+    is_last: bool
 
-        self.start: str = start
-        self.end: str = end
+    def model_post_init(self, __context):
+        if self.is_first:
+            self.start = PARAMETER_KEY + self.start
 
-        self.is_first: bool = is_first
-        self.is_last: bool = is_last
+        if self.is_last:
+            self.end = self.end.replace(",", "") + "}"
 
     @abstractmethod
     def con_loop(self, s: str) -> Any:
@@ -40,7 +40,12 @@ class NodeInt(Node):
             is_first: bool,
             is_last: bool
             ) -> None:
-        super().__init__(start, end, is_first, is_last)
+        super().__init__(
+            start=start,
+            end=end,
+            is_first=is_first,
+            is_last=is_last,
+        )
 
     def con_loop(self, s: str) -> bool:
         return bool(re.fullmatch(r'^(-?)([0-9]|$)+$', s))
@@ -59,7 +64,12 @@ class NodeFloat(Node):
             is_first: bool,
             is_last: bool
             ) -> None:
-        super().__init__(start, end, is_first, is_last)
+        super().__init__(
+            start=start,
+            end=end,
+            is_first=is_first,
+            is_last=is_last,
+        )
 
     def con_loop(self, s: str) -> bool:
         return bool(re.fullmatch(r"^(-?)([0-9]|$)+(\.?)+([0-9]|$)+$", s))
@@ -81,7 +91,12 @@ class NodeStr(Node):
 
         if is_last:
             end += "}"
-        super().__init__(start, end, is_first, is_last)
+        super().__init__(
+            start=start,
+            end=end,
+            is_first=is_first,
+            is_last=is_last,
+        )
 
     def con_loop(self, s: str) -> bool:
         return bool(re.fullmatch(r"^[A-Za-z-,!? 0-9]+$", s))

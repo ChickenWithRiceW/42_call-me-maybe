@@ -19,21 +19,21 @@ def main() -> None:
     )
 
     p.add_argument(
-        "-input",
+        "--input",
         help="[<input_file>]",
         default="data/input/function_calling_tests.json",
         metavar=""
     )
 
     p.add_argument(
-        "-output",
+        "--output",
         help="[<output_file>]",
         default="data/output/function_calls.json",
         metavar=""
     )
 
     p.add_argument(
-        "-functions_definition",
+        "--functions_definition",
         help="[<function_definition_file>]",
         default="data/input/functions_definition.json",
         metavar=""
