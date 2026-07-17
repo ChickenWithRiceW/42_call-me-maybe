@@ -6,6 +6,7 @@ import numpy
 import argparse
 import json
 import llm_sdk
+import os
 from typing import Any
 
 JSON_START = '{"name":"'
@@ -69,6 +70,8 @@ def main() -> None:
         result.update(prompt_parser(prompt, func_def_list, func_names, llm))
         json_result.append(result)
 
+    if not os.path.exists(os.path.dirname(args.output)):
+        os.makedirs(os.path.dirname(args.output))
     try:
         with open(args.output, 'w') as f:
             f.write(json.dumps(json_result, indent=2))
