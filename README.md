@@ -171,27 +171,38 @@ The programm supports multiple arguments on run
 
 #### Rough overview
 ![overview](docs/draw.io/overview.drawio.svg)
+-----
 
 ### FSM
 
-#### The finite state machine walks trough the specific nodes in order to figure out what the next valid character should be.
+#### The finite state machine walks trough the specific nodes constraining what the next valid character would be.
+If the character is fully invalid it sets the logit to `-inf` in order to mark it as invalid and move on with the next selection.
+
 ![overview](docs/draw.io/fsm.drawio.svg)
 
-This approach is not what constrained decoding would do. Constrained decoding would validate the tokens from the LLM before letting it pick them. With this approach that picks the usual best token while going trough it character by character and is more flexible that filtering out tokens beforehand.
+#### This approach is not what constrained decoding is about. Constrained decoding would validate the tokens from the LLM before letting it pick them.
 --------
 ![Progress](docs/draw.io/my.drawio.svg)
 
+### Why am I doing it differently?
+If you would do the tradition constrained decoding you would use more tokens as you DO NOT autocomplete known keys but only constrain the LLM to write them correctly. Trough this approach you use more tokens other then autocompleting keys that you already know about.
+Also when validating the tokens beforehand there can be problems in the sense of defining which tokens are invalid and which once aren't.
 
+#### One example would be this:
 
+Token: `Hello",`
+Valid: `Hello"}`
 
+In this scenario the LLM might wants to autocomplete the field with a `Hello,` thinking there is more to write when it should be the end. The problem about this is if you discard the token you are wasting a possible longer token for a unknown possible smaller token like: `He` whereby you now consume more tokens then if you would just picked the best one and discarded the end.
+
+I think that the approach of just parsing them in general gives a better outcome then limiting the tokens drastically and potentially needing significantly more tokens. 
 
 ## Resources
 
-#### LLM in general
-- [How does a LLM work](https://en.wikipedia.org/wiki/Maze_generation_algorithm)
+### LLM in general
+- [How does a LLMs work - YT](https://www.youtube.com/watch?v=aircAruvnKk&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi)
 
-**AI usage:** AI (an LLM assistant) was used as a learning tool to understand
-concepts needed for the project (e.g. graph/spanning-tree algorithms, A* search,
-mypy/flake8 configuration) while the team wrote the code themselves, and to
-generate the initial skeleton of this README, which was then filled in and
-corrected with project-specific details by the team.
+### Constrained decoding
+- [Nerdy paper](https://arxiv.org/pdf/2307.09702)
+- [SGLang LMSY](https://www.lmsys.org/blog/2024-02-05-compressed-fsm/?ref=aidancooper.co.uk)
+- [One of the best articles explaining it](https://blog.dottxt.ai/coalescence.html?ref=aidancooper.co.uk)
