@@ -1,0 +1,10 @@
+[
+  {
+    "prompt": "What is three plus 1",
+    "name": "fn_add_int",
+    "parameters": {
+      "a": 3,
+      "b": 1
+    }
+  }
+]

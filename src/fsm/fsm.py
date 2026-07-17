@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import re
 
 PARAMETER_KEY = '"parameters":{'
-SUPPORTED_TYPES = {"integer", "float", "string", "boolean"}
+SUPPORTED_TYPES = {"integer", "number", "string", "boolean"}
 
 
 class Node(ABC, BaseModel):
@@ -99,7 +99,7 @@ class NodeStr(Node):
         )
 
     def con_loop(self, s: str) -> bool:
-        return bool(re.fullmatch(r"^[A-Za-z-,!? 0-9]+$", s))
+        return bool(re.fullmatch(r"^[A-Za-z-,!?' 0-9]+$", s))
 
     def con_next(self, s: str) -> bool:
         return s == '"'
@@ -151,7 +151,7 @@ def fsm_node_creator(
                 is_last=is_last
             )
 
-        case "float":
+        case "number":
             end = ""
             return NodeFloat(
                 start=start,

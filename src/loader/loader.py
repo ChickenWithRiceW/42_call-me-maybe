@@ -36,7 +36,7 @@ FUNC_SCHEMA = {
                             "type": "string",
                             "enum": [
                                 "integer",
-                                "float",
+                                "number",
                                 "string",
                                 "boolean",
                                 "none"],
@@ -52,8 +52,8 @@ FUNC_SCHEMA = {
                     "type": {
                         "type": "string",
                         "enum": [
-                            "integer",
                             "float",
+                            "number",
                             "string",
                             "boolean",
                             "none"],

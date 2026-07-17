@@ -55,6 +55,16 @@ def main() -> None:
     # Extract only function names
     func_names = [i["name"] for i in func_def_list]
 
+    # A set to keep track of elements that have been seen
+    seen = set()
+    # A list to store duplicates found in the input list
+    for i in func_names:
+        if i in seen:
+            print("Error function definition name duplicate")
+            exit(1)
+        else:
+            seen.add(i)
+
     if not args.m:
         # Get prompts
         prompts = prompt_json_loader(args.input)
@@ -78,7 +88,6 @@ def main() -> None:
     except PermissionError as e:
         print(e)
         exit(1)
-    # Idk yet
 
 
 def prompt_parser(
@@ -110,6 +119,11 @@ def prompt_parser(
         func_names,
         llm
     )
+
+    if selected_name == "none":
+        tmp = json.loads(json_output + '"parameters":{}}')
+        print(tmp)
+        return tmp
 
     # Extract parameters of selected function
     args = get_arguments_from_func(selected_name, func_def_list)
