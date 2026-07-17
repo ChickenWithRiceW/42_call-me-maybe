@@ -16,7 +16,7 @@ class Node(ABC, BaseModel):
     is_first: bool
     is_last: bool
 
-    def model_post_init(self, __context):
+    def model_post_init(self, __context: Any) -> None:
         if self.is_first:
             self.start = PARAMETER_KEY + self.start
 
@@ -115,7 +115,12 @@ class NodeBool(Node):
             ) -> None:
         if self.is_last:
             self.end = "}"
-        super().__init__(start, end, is_first, is_last)
+        super().__init__(
+            start=start,
+            end=end,
+            is_first=is_first,
+            is_last=is_last,
+        )
 
     def con_loop(self, s: str) -> bool:
         return False

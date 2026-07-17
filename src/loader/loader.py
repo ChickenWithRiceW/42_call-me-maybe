@@ -1,5 +1,6 @@
 import json
 from jsonschema import validate, ValidationError
+from typing import Any
 
 PROMPT_SCHEMA = {
     "type": "array",
@@ -33,7 +34,12 @@ FUNC_SCHEMA = {
                     "properties": {
                         "type": {
                             "type": "string",
-                            "enum": ["integer", "float", "string", "boolean", "none"],
+                            "enum": [
+                                "integer",
+                                "float",
+                                "string",
+                                "boolean",
+                                "none"],
                         }
                     },
                     "additionalProperties": False,
@@ -45,7 +51,12 @@ FUNC_SCHEMA = {
                 "properties": {
                     "type": {
                         "type": "string",
-                        "enum": ["integer", "float", "string", "boolean", "none"],
+                        "enum": [
+                            "integer",
+                            "float",
+                            "string",
+                            "boolean",
+                            "none"],
                     }
                 },
                 "additionalProperties": False,
@@ -56,10 +67,10 @@ FUNC_SCHEMA = {
 }
 
 
-def func_def_loader(file_name: str) -> list:
+def func_def_loader(file_name: str) -> list[dict[str, Any]]:
     try:
         with open(file_name, 'r') as file:
-            data: list = json.load(file)
+            data: list[dict[str, Any]] = json.load(file)
             validate(instance=data, schema=FUNC_SCHEMA)
             return data
     except FileNotFoundError as e:
@@ -70,10 +81,10 @@ def func_def_loader(file_name: str) -> list:
         exit(1)
 
 
-def prompt_json_loader(file_name: str):
+def prompt_json_loader(file_name: str) -> list[str]:
     try:
         with open(file_name, 'r') as file:
-            prompt_list: list = json.load(file)
+            prompt_list: list[dict[str, str]] = json.load(file)
             validate(instance=prompt_list, schema=PROMPT_SCHEMA)
             return [prompt["prompt"] for prompt in prompt_list]
     except FileNotFoundError as e:
@@ -81,12 +92,16 @@ def prompt_json_loader(file_name: str):
         exit(1)
     except json.decoder.JSONDecodeError:
         print(f"Invalid {file_name} json")
+        exit(1)
     except ValidationError as e:
         print(f"{e.message}. Error in {file_name}")
         exit(1)
 
 
-def get_arguments_from_func(func_name: str, func_def_list: list[str]) -> list:
+def get_arguments_from_func(
+        func_name: str,
+        func_def_list: list[dict[str, Any]]
+        ) -> list[tuple[str, str]]:
     args = []
     for d in func_def_list:
         if d["name"] == func_name:

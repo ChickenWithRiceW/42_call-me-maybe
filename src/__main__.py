@@ -1,7 +1,7 @@
-from src.instruction.llm_instruction import get_llm_instruction
+from .instruction.llm_instruction import get_llm_instruction
 from .loader.loader import func_def_loader, get_arguments_from_func, \
     prompt_json_loader
-from src.fsm.fsm import fsm_node_creator, fsm_node_walker, matches_uniq_str
+from .fsm.fsm import fsm_node_creator, fsm_node_walker, matches_uniq_str
 import numpy
 import argparse
 import json
@@ -12,7 +12,8 @@ JSON_START = '{"name":"'
 
 
 def main() -> None:
-    """Entry point for loading json definitons and walking trough given prompts"""
+    """Entry point for loading json definitons and walking
+    trough given prompts"""
     p = argparse.ArgumentParser(
         prog="Call me maybe",
         description="Function calling LLM"
@@ -83,7 +84,8 @@ def prompt_parser(
         func_names: list[str],
         llm: llm_sdk.Small_LLM_Model
         ) -> Any:
-    """Parses all given prompts and outputs a list of the finished json function call
+    """Parses all given prompts and outputs a list of the finished
+    json function call
 
     Args:
         prompt (str): The user prompt
@@ -137,7 +139,8 @@ def select_function(
         llm (llm_sdk.Small_LLM_Model): the llm instance
 
     Returns:
-        tuple[str, str]: Tuple containing the selected function name with the json output
+        tuple[str, str]: Tuple containing the selected function
+        name with the json output
     """
     name_build = ""
     tok_sys_prompt = llm.encode(text=sys_instruction)[0].tolist()

@@ -18,11 +18,9 @@ clean:
 	find . -type d -name .pytest_cache -exec rm -rf {} +
 
 lint:
-	uv run flake8 src/ $(ENTRY)
-	uv run mypy src/
+	uv run flake8 $(ENTRY)
 	uv run mypy $(ENTRY)
 
 lint-strict:
-	uv run flake8 src/ $(ENTRY)
-	uv run mypy src/ --strict
-	uv run mypy $(ENTRY) --strict
+	uv run flake8 $(ENTRY)
+	uv run mypy --strict $(ENTRY)
