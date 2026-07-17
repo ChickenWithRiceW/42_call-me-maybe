@@ -3,6 +3,9 @@ ENTRY = src
 install:
 	uv sync
 
+install-going:
+	HUGGINGFACE_HUB_CACHE=tmp uv sync --cache-dir=tmp
+
 run: install
 	uv run python -m $(ENTRY)
 
