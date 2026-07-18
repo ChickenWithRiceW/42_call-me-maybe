@@ -28,7 +28,7 @@ class Node(ABC, BaseModel):
         pass
 
     @abstractmethod
-    def con_next(self, s: str) -> Any:
+    def con_next(self, s: str, _: str) -> Any:
         pass
 
 
@@ -127,7 +127,7 @@ class NodeBool(Node):
     def con_loop(self, s: str) -> bool:
         return False
 
-    def con_next(self, s: str) -> str | bool:
+    def con_next(self, s: str, _: str) -> str | bool:
         if s == "t":
             return "true" + self.end
         if s == "f":
