@@ -52,7 +52,7 @@ FUNC_SCHEMA = {
                     "type": {
                         "type": "string",
                         "enum": [
-                            "float",
+                            "integer",
                             "number",
                             "string",
                             "boolean",

@@ -99,7 +99,7 @@ class NodeStr(Node):
         )
 
     def con_loop(self, s: str) -> bool:
-        return bool(re.fullmatch(r"^[A-Za-z-,!?' 0-9]+$", s))
+        return bool(re.fullmatch(r'^[^\\"]+$', s))
 
     def con_next(self, s: str) -> bool:
         return s == '"'
@@ -218,7 +218,8 @@ def fsm_node_walker(
                     break
 
                 else:
-                    logits.pop(max_log)
+                    print("POP")
+                    logits[max_log] = float("-inf")
                     pop = True
                     break
 
