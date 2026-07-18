@@ -49,7 +49,6 @@ def main() -> None:
 
     args = p.parse_args()
 
-
     # Load function definitions
     func_def_list = func_def_loader(args.functions_definition)
 
@@ -73,11 +72,6 @@ def main() -> None:
         prompts = [input("Prompt: ")]
 
     llm = llm_sdk.Small_LLM_Model()
-
-    # print(llm.get_path_to_vocab_file())
-    # print(llm.get_path_to_merges_file())
-    # print(llm.get_path_to_tokenizer_file())
-    # exit(1)
 
     json_result = []
     for prompt in prompts:

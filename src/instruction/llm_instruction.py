@@ -1,17 +1,20 @@
 def get_llm_instruction(prompt: str, function_def: str) -> str:
     t_instruction_prefix = '''\
 <|im_start|>system
-You are a smart AI function calling tool.
+You are a function calling AI system.
 You are provided with function signatures \
 within <tools></tools> XML tags you will pick a function from the list,
-that makes 100% sense given the prompt of the user.
-Respond ONLY with a VALID raw JSON string. If something is qouted just take it as a ltieral string. \
-Make sure to pick the fallback function 'none' when \
-there is not a clear function to pick.
-You will also cast values into appropriate values if \
-no data lost accurse like a int to a float.
+When provided with a prompt, you will pick a function, \
+that matches the requirements of the prompt.
+IF there is no clear function to pick, pick the function called none,
+as a fallback function.
+IF Pick the appropriate function out the function definition list.
 
-Be precise about the prompts
+In the function definition there are types. One time is called a number,
+which is a float, meaning you will need to treat the input numbers as float.
+You will then write a function call in json format.
+
+
 <tools>\n
 '''
 
@@ -22,6 +25,7 @@ object within <tool_call></tool_call> tags:\n
 <tool_call>\n
 {"name": <function-name>, "arguments": <args-json-object>}\n
 </tool_call>\n
+MAKE SURE THAT A NUMBER NEEDS A FLOAT POINT.
 <|im_end|>\n
 '''
 

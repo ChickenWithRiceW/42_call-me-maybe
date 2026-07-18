@@ -50,7 +50,7 @@ class NodeInt(Node):
     def con_loop(self, s: str) -> bool:
         return bool(re.fullmatch(r'^(-?)([0-9]|$)+$', s))
 
-    def con_next(self, s: str) -> bool:
+    def con_next(self, s: str, _: str) -> bool:
         if self.is_last:
             return s == "}"
         return s == ","
@@ -74,7 +74,9 @@ class NodeFloat(Node):
     def con_loop(self, s: str) -> bool:
         return bool(re.fullmatch(r"^(-?)([0-9]|$)+(\.?)+([0-9]|$)+$", s))
 
-    def con_next(self, s: str) -> bool:
+    def con_next(self, s: str, full: str) -> bool:
+        if '.' not in full:
+            return False
         if self.is_last:
             return s == "}"
         return s == ","
@@ -101,7 +103,7 @@ class NodeStr(Node):
     def con_loop(self, s: str) -> bool:
         return bool(re.fullmatch(r'^[^\\"]+$', s))
 
-    def con_next(self, s: str) -> bool:
+    def con_next(self, s: str, _: str) -> bool:
         return s == '"'
 
 
@@ -208,8 +210,8 @@ def fsm_node_walker(
                     print(json_output)
                     continue
 
-                elif node.con_next(c):
-                    auto_complete = node.con_next(c)
+                elif node.con_next(c, build_str):
+                    auto_complete = node.con_next(c, build_str)
 
                     if isinstance(auto_complete, bool):
                         json_output += c + node.end
